@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { TextInput, Text, TouchableOpacity, View, Button, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { TextInput, Text, TouchableOpacity, View, Button, StyleSheet, ScrollView, Modal } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -26,7 +26,7 @@ class Principal extends React.Component {
         <Text>{"Usuário:"}</Text>
         <TextInput onChangeText={(texto) => this.setState({ usuario: texto })}></TextInput>
         <Text>{"Senha:"}</Text>
-        <TextInput onChangeText={(texto) => this.setState({ senha: texto })}></TextInput>
+        <TextInput secureTextEntry onChangeText={(texto) => this.setState({ senha: texto })}></TextInput>
         <Button title="Logar" onPress={() => this.ler()}></Button>
       </View>
     )
@@ -37,7 +37,6 @@ class Principal extends React.Component {
       let senha = await AsyncStorage.getItem(this.state.usuario);
       if (senha != null) {
         if (senha == this.state.senha) {
-          //alert("Logado!!!");
           this.props.navigation.navigate('Tela3')
         } else {
           alert("Senha Incorreta!");
@@ -75,7 +74,7 @@ class Cadastro extends React.Component {
         <Text>{"Cadastrar Usuário:"}</Text>
         <TextInput onChangeText={(texto) => this.setState({ user: texto })}></TextInput>
         <Text>{"Cadastrar Senha:"}</Text>
-        <TextInput onChangeText={(texto) => this.setState({ password: texto })}></TextInput>
+        <TextInput secureTextEntry onChangeText={(texto) => this.setState({ password: texto })}></TextInput>
         <Button title="Cadastrar" onPress={() => this.gravar()} />
       </View>
     )
@@ -93,37 +92,119 @@ class Nav2 extends React.Component {
         <Stack.Screen name="Tela6" component={Tela6} />
         <Stack.Screen name="Tela7" component={Tela7} />
         <Stack.Screen name="Tela8" component={Tela8} />
+        <Stack.Screen name="RelatorioSalvo" component={RelatorioSalvo} />
       </Stack.Navigator>
     );
   }
 }
 
 class Tela3 extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      relatorioA: null,
+      relatorioB: null,
+      relatorioC: null,
+      relatorioD: null,
+      relatorioE: null,
+      modalVisible: false,
+    };
+  }
+
+  componentDidMount() {
+    this.loadReports();
+  }
+
+  loadReports = async () => {
+    try {
+      const relatorioA = await AsyncStorage.getItem('relatorioA');
+      const relatorioB = await AsyncStorage.getItem('relatorioB');
+      const relatorioC = await AsyncStorage.getItem('relatorioC');
+      const relatorioD = await AsyncStorage.getItem('relatorioD');
+      const relatorioE = await AsyncStorage.getItem('relatorioE');
+      this.setState({
+        relatorioA: JSON.parse(relatorioA),
+        relatorioB: JSON.parse(relatorioB),
+        relatorioC: JSON.parse(relatorioC),
+        relatorioD: JSON.parse(relatorioD),
+        relatorioE: JSON.parse(relatorioE),
+      });
+    } catch (error) {
+      alert("Erro ao carregar os relatórios!");
+    }
+  }
+
+  renderReportButton(title, reportData) {
+    return (
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => this.props.navigation.navigate('RelatorioSalvo', { title, reportData })}>
+        <Text>{`Ver ${title}`}</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  toggleModal = () => {
+    this.setState({ modalVisible: !this.state.modalVisible });
+  };
+
   render() {
     return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Text>{"Relatórios Disponiveis"}</Text>
-        <TouchableOpacity style={styles.button} onPress={() =>
-          this.props.navigation.navigate('Tela4')}>
-          <Text>Relatorio A</Text>
+      <ScrollView style={{ flex: 1, padding: 10 }}>
+        <Text>{"Relatórios Disponíveis"}</Text>
+        <TouchableOpacity style={styles.button} onPress={this.toggleModal}>
+          <Text>Ver Relatórios</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() =>
-          this.props.navigation.navigate('Tela5')}>
-          <Text>Relatorio B</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() =>
-          this.props.navigation.navigate('Tela6')}>
-          <Text>Relatorio C</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() =>
-          this.props.navigation.navigate('Tela7')}>
-          <Text>Relatorio D</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() =>
-          this.props.navigation.navigate('Tela8')}>
-          <Text>Relatorio E</Text>
-        </TouchableOpacity>
-      </View>
+        <Modal
+          transparent={true}
+          visible={this.state.modalVisible}
+          onRequestClose={this.toggleModal}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Selecione um Relatório</Text>
+              <TouchableOpacity style={styles.button} onPress={() => {
+                this.toggleModal();
+                this.props.navigation.navigate('Tela4');
+              }}>
+                <Text>Relatório A</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={() => {
+                this.toggleModal();
+                this.props.navigation.navigate('Tela5');
+              }}>
+                <Text>Relatório B</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={() => {
+                this.toggleModal();
+                this.props.navigation.navigate('Tela6');
+              }}>
+                <Text>Relatório C</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={() => {
+                this.toggleModal();
+                this.props.navigation.navigate('Tela7');
+              }}>
+                <Text>Relatório D</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={() => {
+                this.toggleModal();
+                this.props.navigation.navigate('Tela8');
+              }}>
+                <Text>Relatório E</Text>
+              </TouchableOpacity>
+              <Button title="Fechar" onPress={this.toggleModal} />
+            </View>
+          </View>
+        </Modal>
+        <View style={{ marginTop: 20 }}>
+          {this.renderReportButton("Relatório A", this.state.relatorioA)}
+          {this.renderReportButton("Relatório B", this.state.relatorioB)}
+          {this.renderReportButton("Relatório C", this.state.relatorioC)}
+          {this.renderReportButton("Relatório D", this.state.relatorioD)}
+          {this.renderReportButton("Relatório E", this.state.relatorioE)}
+        </View>
+      </ScrollView>
     );
   }
 }
@@ -137,6 +218,21 @@ class Tela4 extends React.Component {
       check3: false,
     };
   }
+
+  saveReport = async () => {
+    const reportData = {
+      check1: this.state.check1,
+      check2: this.state.check2,
+      check3: this.state.check3,
+    };
+
+    try {
+      await AsyncStorage.setItem('relatorioA', JSON.stringify(reportData));
+      alert("Relatório salvo com sucesso!");
+    } catch (error) {
+      alert("Erro ao salvar o relatório!");
+    }
+  };
 
   render() {
     return (
@@ -160,6 +256,9 @@ class Tela4 extends React.Component {
               onPress={() => this.setState({ check3: !this.state.check3 })}
             />
           </Card.Content>
+          <Card.Actions>
+            <Button title="Salvar Relatório" onPress={this.saveReport} />
+          </Card.Actions>
         </Card>
       </View>
     );
@@ -175,6 +274,22 @@ class Tela5 extends React.Component {
       check3: false,
     };
   }
+
+  saveReport = async () => {
+    const reportData = {
+      check1: this.state.check1,
+      check2: this.state.check2,
+      check3: this.state.check3,
+    };
+
+    try {
+      await AsyncStorage.setItem('relatorioB', JSON.stringify(reportData));
+      alert("Relatório salvo com sucesso!");
+    } catch (error) {
+      alert("Erro ao salvar o relatório!");
+    }
+  };
+
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -197,6 +312,9 @@ class Tela5 extends React.Component {
               onPress={() => this.setState({ check3: !this.state.check3 })}
             />
           </Card.Content>
+          <Card.Actions>
+            <Button title="Salvar Relatório" onPress={this.saveReport} />
+          </Card.Actions>
         </Card>
       </View>
     );
@@ -212,6 +330,22 @@ class Tela6 extends React.Component {
       check3: false,
     };
   }
+
+  saveReport = async () => {
+    const reportData = {
+      check1: this.state.check1,
+      check2: this.state.check2,
+      check3: this.state.check3,
+    };
+
+    try {
+      await AsyncStorage.setItem('relatorioC', JSON.stringify(reportData));
+      alert("Relatório salvo com sucesso!");
+    } catch (error) {
+      alert("Erro ao salvar o relatório!");
+    }
+  };
+
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -234,6 +368,9 @@ class Tela6 extends React.Component {
               onPress={() => this.setState({ check3: !this.state.check3 })}
             />
           </Card.Content>
+          <Card.Actions>
+            <Button title="Salvar Relatório" onPress={this.saveReport} />
+          </Card.Actions>
         </Card>
       </View>
     );
@@ -249,6 +386,22 @@ class Tela7 extends React.Component {
       check3: false,
     };
   }
+
+  saveReport = async () => {
+    const reportData = {
+      check1: this.state.check1,
+      check2: this.state.check2,
+      check3: this.state.check3,
+    };
+
+    try {
+      await AsyncStorage.setItem('relatorioD', JSON.stringify(reportData));
+      alert("Relatório salvo com sucesso!");
+    } catch (error) {
+      alert("Erro ao salvar o relatório!");
+    }
+  };
+
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -271,6 +424,9 @@ class Tela7 extends React.Component {
               onPress={() => this.setState({ check3: !this.state.check3 })}
             />
           </Card.Content>
+          <Card.Actions>
+            <Button title="Salvar Relatório" onPress={this.saveReport} />
+          </Card.Actions>
         </Card>
       </View>
     );
@@ -286,6 +442,22 @@ class Tela8 extends React.Component {
       check3: false,
     };
   }
+
+  saveReport = async () => {
+    const reportData = {
+      check1: this.state.check1,
+      check2: this.state.check2,
+      check3: this.state.check3,
+    };
+
+    try {
+      await AsyncStorage.setItem('relatorioE', JSON.stringify(reportData));
+      alert("Relatório salvo com sucesso!");
+    } catch (error) {
+      alert("Erro ao salvar o relatório!");
+    }
+  };
+
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -308,7 +480,44 @@ class Tela8 extends React.Component {
               onPress={() => this.setState({ check3: !this.state.check3 })}
             />
           </Card.Content>
+          <Card.Actions>
+            <Button title="Salvar Relatório" onPress={this.saveReport} />
+          </Card.Actions>
         </Card>
+      </View>
+    );
+  }
+}
+
+class RelatorioSalvo extends React.Component {
+  render() {
+    const { route } = this.props;
+    const { title, reportData } = route.params;
+
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{title}</Text>
+        {reportData ? (
+          <View>
+            <CheckBox
+              title="Opção 1"
+              checked={reportData.check1}
+              disabled
+            />
+            <CheckBox
+              title="Opção 2"
+              checked={reportData.check2}
+              disabled
+            />
+            <CheckBox
+              title="Opção 3"
+              checked={reportData.check3}
+              disabled
+            />
+          </View>
+        ) : (
+          <Text>Nenhum dado salvo para este relatório.</Text>
+        )}
       </View>
     );
   }
@@ -330,8 +539,25 @@ const styles = StyleSheet.create({
   countContainer: {
     alignItems: 'center',
     padding: 10,
-  }
-})
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+});
 
 class App extends React.Component {
   constructor(props) {
