@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextInput, Text, TouchableOpacity, View, Button, StyleSheet, ScrollView, Modal } from 'react-native';
+import { TextInput, Text, TouchableOpacity, View, Button, StyleSheet, ScrollView, Modal, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -108,11 +108,19 @@ class Tela3 extends React.Component {
       relatorioD: null,
       relatorioE: null,
       modalVisible: false,
+      savedModalVisible: false,
     };
   }
 
   componentDidMount() {
     this.loadReports();
+    this.focusListener = this.props.navigation.addListener('focus', () => {
+      this.loadReports();
+    });
+  }
+
+  componentWillUnmount() {
+    this.focusListener();
   }
 
   loadReports = async () => {
@@ -144,8 +152,39 @@ class Tela3 extends React.Component {
     );
   }
 
+  deleteReport = async (reportKey) => {
+    try {
+      await AsyncStorage.removeItem(reportKey);
+      this.loadReports();
+      alert("Relatório deletado com sucesso!");
+    } catch (error) {
+      alert("Erro ao deletar o relatório!");
+    }
+  }
+
+  renderSavedReportButton(title, reportData, reportKey) {
+    return (
+      <View style={styles.savedReportContainer} key={reportKey}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => this.props.navigation.navigate('RelatorioSalvo', { title, reportData })}>
+          <Text>{`Ver ${title}`}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => this.deleteReport(reportKey)}>
+          <Text style={styles.deleteButtonText}>X</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   toggleModal = () => {
     this.setState({ modalVisible: !this.state.modalVisible });
+  };
+
+  toggleSavedModal = () => {
+    this.setState({ savedModalVisible: !this.state.savedModalVisible });
   };
 
   render() {
@@ -197,13 +236,26 @@ class Tela3 extends React.Component {
             </View>
           </View>
         </Modal>
-        <View style={{ marginTop: 20 }}>
-          {this.renderReportButton("Relatório A", this.state.relatorioA)}
-          {this.renderReportButton("Relatório B", this.state.relatorioB)}
-          {this.renderReportButton("Relatório C", this.state.relatorioC)}
-          {this.renderReportButton("Relatório D", this.state.relatorioD)}
-          {this.renderReportButton("Relatório E", this.state.relatorioE)}
-        </View>
+        <TouchableOpacity style={styles.button} onPress={this.toggleSavedModal}>
+          <Text>Ver Relatórios Salvos</Text>
+        </TouchableOpacity>
+        <Modal
+          transparent={true}
+          visible={this.state.savedModalVisible}
+          onRequestClose={this.toggleSavedModal}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Relatórios Salvos</Text>
+              {this.renderSavedReportButton("Relatório A", this.state.relatorioA, 'relatorioA')}
+              {this.renderSavedReportButton("Relatório B", this.state.relatorioB, 'relatorioB')}
+              {this.renderSavedReportButton("Relatório C", this.state.relatorioC, 'relatorioC')}
+              {this.renderSavedReportButton("Relatório D", this.state.relatorioD, 'relatorioD')}
+              {this.renderSavedReportButton("Relatório E", this.state.relatorioE, 'relatorioE')}
+              <Button title="Fechar" onPress={this.toggleSavedModal} />
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     );
   }
@@ -228,6 +280,7 @@ class Tela4 extends React.Component {
 
     try {
       await AsyncStorage.setItem('relatorioA', JSON.stringify(reportData));
+      this.props.navigation.navigate('Tela3');
       alert("Relatório salvo com sucesso!");
     } catch (error) {
       alert("Erro ao salvar o relatório!");
@@ -284,6 +337,7 @@ class Tela5 extends React.Component {
 
     try {
       await AsyncStorage.setItem('relatorioB', JSON.stringify(reportData));
+      this.props.navigation.navigate('Tela3');
       alert("Relatório salvo com sucesso!");
     } catch (error) {
       alert("Erro ao salvar o relatório!");
@@ -340,6 +394,7 @@ class Tela6 extends React.Component {
 
     try {
       await AsyncStorage.setItem('relatorioC', JSON.stringify(reportData));
+      this.props.navigation.navigate('Tela3');
       alert("Relatório salvo com sucesso!");
     } catch (error) {
       alert("Erro ao salvar o relatório!");
@@ -396,6 +451,7 @@ class Tela7 extends React.Component {
 
     try {
       await AsyncStorage.setItem('relatorioD', JSON.stringify(reportData));
+      this.props.navigation.navigate('Tela3');
       alert("Relatório salvo com sucesso!");
     } catch (error) {
       alert("Erro ao salvar o relatório!");
@@ -452,6 +508,7 @@ class Tela8 extends React.Component {
 
     try {
       await AsyncStorage.setItem('relatorioE', JSON.stringify(reportData));
+      this.props.navigation.navigate('Tela3');
       alert("Relatório salvo com sucesso!");
     } catch (error) {
       alert("Erro ao salvar o relatório!");
@@ -556,6 +613,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  savedReportContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  deleteButton: {
+    backgroundColor: '#FF0000',
+    padding: 10,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });
 
